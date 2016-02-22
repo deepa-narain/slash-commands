@@ -1,0 +1,128 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta http-equiv="x-ua-compatible" content="IE=Edge"/>
+  <title>At.js</title>
+  <link rel="stylesheet" href="../dist/css/jquery.atwho.css" />
+  <link rel="stylesheet" href="./style.css" />
+  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+  <script type="text/javascript" src="../dist/js (1)/jquery.atwho.js"></script>
+  <script type="text/javascript" src="../dist/js (1)/connect.js"></script>
+  <script type="text/javascript">
+
+  /*
+  ** var tags1: holds array of main commands
+  ** var subtags1: holds array of subcommands
+  ** var formatHints, sfh: holds format hints for commands/subcommands respectively
+  ** var helpTexts, sht: holds helpTetxs for commands/subcommands respectively
+  */
+  $(function (){
+  //getData() gets details of the slash commands from connect.js which is organized into seperate respective arrays
+  var text = getData();
+  var _, tags1 = [], subtags1 = [], count = 0, selected = null, formatHints = [], helpTexts = [], sfh = [], sht = [];
+
+  
+  for (_ in text.myCommands)
+  {
+    c = text.myCommands[_];
+    tags1.push("/" + c.command);  //char '/' added to every slash command for display purposes
+    formatHints.push(c.formatHint);
+    helpTexts.push(c.helpText);
+  }
+   
+   //creates a controller that binds 'slash' with all the tags
+    $('#editable').atwho({
+      at: "/",
+      data: {tags1, formatHints, helpTexts},
+      limit: 200,
+      callbacks: {
+        //if command has subcommands, secondaryMenu() is called to add the new controller
+        afterInsert: function (value) {
+          selected = value;
+
+          var i, c, _;
+          for (i in tags1)
+          {
+            if (tags1[i] == selected.substring(1))
+            {
+              break;
+            }
+          }
+
+          subtags1 = [];
+            sfh = [];
+            sht = [];
+
+          for (_ in text.myCommands[i].subCommands)
+          {
+            c = " " + text.myCommands[i].subCommands[_].command;
+
+            subtags1.push(c);
+            sfh.push(" " + text.myCommands[i].subCommands[_].formatHint);
+            sht.push(" " + text.myCommands[i].subCommands[_].helpText);
+          }
+
+          if (subtags1.length == 0)
+          {
+            return 1;  //return 1 to indicate sub tags not present
+          }
+          else
+          {
+            secondaryMenu();  //return 0 to indicate sub tags are present
+            return 0;
+          } 
+        }        
+      }
+    });
+
+    function secondaryMenu()
+    {
+      var tags1 = [];
+      tags1 = subtags1;
+      formatHints = sfh;
+      helpTexts = sht;
+       $('#editable').atwho({
+        at: selected,
+        data: {tags1, formatHints, helpTexts},
+        limit: 200,
+        callbacks: {
+          // controller deleted after subcommand has been selected
+          afterInsert: function() {
+              if (selected.charAt(0) == selected.charAt(1))
+              {
+                selected = selected.substr(1);
+              }
+              var ref = this.context.app.controllers;
+              delete ref[selected];
+              return 0;
+            }
+          }  
+      });
+
+       subtags1 = [];  //subtags[] is cleared
+    }
+  });  
+   
+  </script>
+
+
+
+
+  <style type="text/css">
+    /*override atwho's style*/
+    .atwho-inserted {
+      color: #4183C4;
+    }
+    .atwho-query {
+      color: #4183C4;
+    }
+  </style>
+</head>
+<body>
+  <div class="container wrapper">
+    <div id="main">
+      <div id="editable" class="inputor" contentEditable="true"></div>
+    </div>
+  </div>
+</body>
+</html>
